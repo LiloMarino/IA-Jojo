@@ -16,7 +16,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 CHAR_LIST = Path("characters.txt")
 LINKS_JSON = "links.json"
 WAIT_TIME = 5
-SLEEP_TIME = 1
+SLEEP_TIME = 1.5
 
 
 def save_links(links: dict[str, list]):
@@ -71,7 +71,7 @@ def fetch_image_links(
     image_count = 0
     layout_xpath = '//*[@id="rso"]/div/div/div[1]/div/div/div'
     img_xpath = (
-        '//*[@id="Sva75c"]/div[2]/div[2]/div/div[2]/c-wiz/div/div[3]/div[1]/a/img[1]'
+        '//*[@id="Sva75c"]/div[2]/div[2]/div/div[2]/c-wiz/div/div[3]/div[1]/a/img'
     )
     while image_count < limit:
         thumbnail_results = WebDriverWait(wd, WAIT_TIME).until(
@@ -86,8 +86,8 @@ def fetch_image_links(
                 print(e)
                 continue
             try:
-                actual_image = WebDriverWait(wd, WAIT_TIME).until(
-                    lambda x: x.find_element(
+                actual_images = WebDriverWait(wd, WAIT_TIME).until(
+                    lambda x: x.find_elements(
                         By.XPATH,
                         img_xpath,
                     )
@@ -95,10 +95,10 @@ def fetch_image_links(
             except TimeoutException:
                 continue
 
-            if actual_image.get_attribute(
-                "src"
-            ) and "http" in actual_image.get_attribute("src"):
-                image_links.add(actual_image.get_attribute("src"))
+            for image in actual_images:
+                if "encrypted" not in image.get_attribute("src"):
+                    image_links.add(image.get_attribute("src"))
+                    break
 
             image_count = len(image_links)
 
